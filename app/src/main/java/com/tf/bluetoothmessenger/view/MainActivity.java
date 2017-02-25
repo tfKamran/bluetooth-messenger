@@ -1,5 +1,6 @@
 package com.tf.bluetoothmessenger.view;
 
+import android.bluetooth.BluetoothDevice;
 import android.content.Context;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
@@ -17,12 +18,11 @@ import com.tf.bluetoothmessenger.model.BTDevice;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
-import io.palaima.smoothbluetooth.Device;
+public class MainActivity extends AppCompatActivity implements BluetoothManager.OnBluetoothEnabledListener {
 
-public class MainActivity extends AppCompatActivity implements BluetoothManager.OnDeviceFoundListener {
-
-    private ListView mListNearbyDevices;
+    private View mProgressBar;
     private BluetoothDeviceAdapter mAdapter;
 
     private BluetoothManager mBluetoothManager;
@@ -33,7 +33,9 @@ public class MainActivity extends AppCompatActivity implements BluetoothManager.
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        mListNearbyDevices = (ListView) findViewById(R.id.list_nearby_devices);
+        mProgressBar = findViewById(R.id.progress_bar);
+        ListView mListNearbyDevices = (ListView) findViewById(R.id.list_nearby_devices);
+
         mAdapter = new BluetoothDeviceAdapter(MainActivity.this);
         mListNearbyDevices.setAdapter(mAdapter);
 
@@ -47,11 +49,14 @@ public class MainActivity extends AppCompatActivity implements BluetoothManager.
         if (!mBluetoothManager.isBluetoothEnabled()) {
             mBluetoothManager.enableBluetooth();
 
+            showProgressBar();
+
             wasBluetoothDisabled = true;
+        } else {
+            populatePairedDevices();
         }
 
-        mBluetoothManager.addOnDeviceFoundListener(this);
-        mBluetoothManager.scanForNearByDevices();
+        mBluetoothManager.addOnBluetoothEnabledListener(this);
     }
 
     @Override
@@ -59,16 +64,34 @@ public class MainActivity extends AppCompatActivity implements BluetoothManager.
         super.onStop();
 
         mBluetoothManager.stopScanForNearByDevices();
-        mBluetoothManager.removeOnDeviceFoundListener(this);
+        mBluetoothManager.removeOnBluetoothEnabledListener(this);
 
         if (wasBluetoothDisabled) {
             mBluetoothManager.disableBluetooth();
         }
     }
 
+    private void populatePairedDevices() {
+        final Set<BluetoothDevice> pairedDevices = mBluetoothManager.getPairedDevices();
+
+        for (BluetoothDevice pairedDevice : pairedDevices) {
+            mAdapter.add(new BTDevice(pairedDevice));
+        }
+
+        hideProgressBar();
+    }
+
+    private void showProgressBar() {
+        mProgressBar.setVisibility(View.VISIBLE);
+    }
+
+    private void hideProgressBar() {
+        mProgressBar.setVisibility(View.GONE);
+    }
+
     @Override
-    public void onFound(Device device) {
-        mAdapter.add(new BTDevice(device));
+    public void onEnabled() {
+        populatePairedDevices();
     }
 
     private class BluetoothDeviceAdapter extends ArrayAdapter<BTDevice> {

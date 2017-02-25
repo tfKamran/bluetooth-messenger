@@ -1,11 +1,16 @@
 package com.tf.bluetoothmessenger.data;
 
 import android.bluetooth.BluetoothAdapter;
+import android.bluetooth.BluetoothDevice;
+import android.content.BroadcastReceiver;
 import android.content.Context;
+import android.content.Intent;
+import android.content.IntentFilter;
 import android.util.Log;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
 import io.palaima.smoothbluetooth.Device;
 import io.palaima.smoothbluetooth.SmoothBluetooth;
@@ -21,8 +26,9 @@ public class BluetoothManager implements SmoothBluetooth.Listener {
     private static BluetoothManager mInstance;
     private final Context mContext;
     private final SmoothBluetooth mSmoothBluetooth;
-    private List<OnDeviceFoundListener> mOnDeviceFoundListeners = new ArrayList<>();
     private BluetoothAdapter mBluetoothAdapter;
+    private List<OnDeviceFoundListener> mOnDeviceFoundListeners = new ArrayList<>();
+    private List<OnBluetoothEnabledListener> mOnBluetootEnabledListeners = new ArrayList<>();
 
     public static BluetoothManager getInstance(Context context) {
         if (mInstance == null) {
@@ -51,6 +57,10 @@ public class BluetoothManager implements SmoothBluetooth.Listener {
 
     public boolean isBluetoothEnabled() {
         return mBluetoothAdapter.isEnabled();
+    }
+
+    public Set<BluetoothDevice> getPairedDevices() {
+        return mBluetoothAdapter.getBondedDevices();
     }
 
     public void scanForNearByDevices() {
@@ -122,6 +132,29 @@ public class BluetoothManager implements SmoothBluetooth.Listener {
 
     }
 
+    private final BroadcastReceiver mBluetoothActionReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            final String action = intent.getAction();
+
+            Log.d(TAG, action);
+
+            if (action.equals(BluetoothAdapter.ACTION_STATE_CHANGED)) {
+                final int bluetoothState = intent.getIntExtra(BluetoothAdapter.EXTRA_STATE,
+                        BluetoothAdapter.ERROR);
+                switch (bluetoothState) {
+                    case BluetoothAdapter.STATE_ON:
+                        Log.d(TAG, "State On");
+
+                        for (OnBluetoothEnabledListener listener : mOnBluetootEnabledListeners) {
+                            listener.onEnabled();
+                        }
+                        break;
+                }
+            }
+        }
+    };
+
     public void addOnDeviceFoundListener(OnDeviceFoundListener listener) {
         mOnDeviceFoundListeners.add(listener);
     }
@@ -130,7 +163,25 @@ public class BluetoothManager implements SmoothBluetooth.Listener {
         mOnDeviceFoundListeners.remove(listener);
     }
 
+    public void addOnBluetoothEnabledListener(OnBluetoothEnabledListener listener) {
+        mOnBluetootEnabledListeners.add(listener);
+
+        mContext.registerReceiver(mBluetoothActionReceiver, new IntentFilter(BluetoothAdapter.ACTION_STATE_CHANGED));
+    }
+
+    public void removeOnBluetoothEnabledListener(OnBluetoothEnabledListener listener) {
+        mOnBluetootEnabledListeners.remove(listener);
+
+        if (mOnBluetootEnabledListeners.size() == 0) {
+            mContext.unregisterReceiver(mBluetoothActionReceiver);
+        }
+    }
+
     public interface OnDeviceFoundListener {
         void onFound(Device device);
+    }
+
+    public interface OnBluetoothEnabledListener {
+        void onEnabled();
     }
 }
