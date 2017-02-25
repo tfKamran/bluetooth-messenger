@@ -45,6 +45,10 @@ public class BluetoothManager implements SmoothBluetooth.Listener {
         }
     }
 
+    public void disableBluetooth() {
+        mBluetoothAdapter.disable();
+    }
+
     public boolean isBluetoothEnabled() {
         return mBluetoothAdapter.isEnabled();
     }
