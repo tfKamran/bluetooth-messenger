@@ -1,6 +1,7 @@
 package com.tf.bluetoothmessenger.view;
 
 import android.os.Bundle;
+import android.support.v4.app.FragmentManager;
 import android.support.v7.app.AppCompatActivity;
 
 import com.tf.bluetoothmessenger.R;
@@ -26,11 +27,22 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void initiateChat(BTDevice device) {
-//        getSupportFragmentManager()
-//                .beginTransaction()
-//                .replace(R.id.fragment_holder, ConversationFragment.getInstance())
-//                .addToBackStack(null)
-//                .commit();
+        getSupportFragmentManager()
+                .beginTransaction()
+                .replace(R.id.fragment_holder, ConversationFragment.getInstance(device))
+                .addToBackStack(null)
+                .commit();
+    }
+
+    @Override
+    public void onBackPressed() {
+        final FragmentManager fragmentManager = getSupportFragmentManager();
+
+        if (fragmentManager.getBackStackEntryCount() > 0) {
+            fragmentManager.popBackStackImmediate();
+        } else {
+            super.onBackPressed();
+        }
     }
 
     @Override

@@ -29,6 +29,7 @@ public class BluetoothManager implements SmoothBluetooth.Listener {
     private BluetoothAdapter mBluetoothAdapter;
     private List<OnDeviceFoundListener> mOnDeviceFoundListeners = new ArrayList<>();
     private List<OnBluetoothEnabledListener> mOnBluetootEnabledListeners = new ArrayList<>();
+    private List<OnMessageReceivedListener> mOnMessageReceivedListeners = new ArrayList<>();
 
     public static BluetoothManager getInstance(Context context) {
         if (mInstance == null) {
@@ -129,7 +130,9 @@ public class BluetoothManager implements SmoothBluetooth.Listener {
 
     @Override
     public void onDataReceived(int data) {
-
+        for (OnMessageReceivedListener listener : mOnMessageReceivedListeners) {
+            listener.onReceived("Test message");
+        }
     }
 
     private final BroadcastReceiver mBluetoothActionReceiver = new BroadcastReceiver() {
@@ -177,11 +180,23 @@ public class BluetoothManager implements SmoothBluetooth.Listener {
         }
     }
 
+    public void addOnMessageReceivedListener(OnMessageReceivedListener listener) {
+        mOnMessageReceivedListeners.add(listener);
+    }
+
+    public void removeOnMessageReceivedListener(OnMessageReceivedListener listener) {
+        mOnMessageReceivedListeners.remove(listener);
+    }
+
     public interface OnDeviceFoundListener {
         void onFound(Device device);
     }
 
     public interface OnBluetoothEnabledListener {
         void onEnabled();
+    }
+
+    public interface OnMessageReceivedListener {
+        void onReceived(String message);
     }
 }

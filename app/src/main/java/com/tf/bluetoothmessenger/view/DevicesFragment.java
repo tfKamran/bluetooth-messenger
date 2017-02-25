@@ -10,6 +10,7 @@ import android.support.v4.app.Fragment;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
 import android.widget.TextView;
@@ -25,7 +26,8 @@ import java.util.Set;
 /**
  * A simple {@link Fragment} subclass.
  */
-public class DevicesFragment extends Fragment implements BluetoothManager.OnBluetoothEnabledListener {
+public class DevicesFragment extends Fragment implements BluetoothManager.OnBluetoothEnabledListener,
+        AdapterView.OnItemClickListener {
 
     private View mProgressBar;
     private BluetoothDeviceAdapter mAdapter;
@@ -47,10 +49,12 @@ public class DevicesFragment extends Fragment implements BluetoothManager.OnBlue
         super.onViewCreated(view, savedInstanceState);
 
         mProgressBar = view.findViewById(R.id.progress_bar);
-        ListView mListNearbyDevices = (ListView) view.findViewById(R.id.list_nearby_devices);
+        ListView listNearbyDevices = (ListView) view.findViewById(R.id.list_nearby_devices);
 
         mAdapter = new BluetoothDeviceAdapter(getActivity());
-        mListNearbyDevices.setAdapter(mAdapter);
+        listNearbyDevices.setAdapter(mAdapter);
+
+        listNearbyDevices.setOnItemClickListener(this);
 
         mBluetoothManager = BluetoothManager.getInstance(getActivity());
     }
@@ -98,6 +102,11 @@ public class DevicesFragment extends Fragment implements BluetoothManager.OnBlue
     @Override
     public void onEnabled() {
         populatePairedDevices();
+    }
+
+    @Override
+    public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+        ((MainActivity) getActivity()).initiateChat(mAdapter.getItem(position));
     }
 
     private class BluetoothDeviceAdapter extends ArrayAdapter<BTDevice> {
