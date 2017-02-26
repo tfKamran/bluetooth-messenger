@@ -28,7 +28,7 @@ public class BluetoothManager implements SmoothBluetooth.Listener {
     private final SmoothBluetooth mSmoothBluetooth;
     private BluetoothAdapter mBluetoothAdapter;
     private List<OnDeviceFoundListener> mOnDeviceFoundListeners = new ArrayList<>();
-    private List<OnBluetoothEnabledListener> mOnBluetootEnabledListeners = new ArrayList<>();
+    private List<OnBluetoothEnabledListener> mOnBluetoothEnabledListeners = new ArrayList<>();
     private List<OnMessageReceivedListener> mOnMessageReceivedListeners = new ArrayList<>();
 
     public static BluetoothManager getInstance(Context context) {
@@ -149,7 +149,7 @@ public class BluetoothManager implements SmoothBluetooth.Listener {
                     case BluetoothAdapter.STATE_ON:
                         Log.d(TAG, "State On");
 
-                        for (OnBluetoothEnabledListener listener : mOnBluetootEnabledListeners) {
+                        for (OnBluetoothEnabledListener listener : mOnBluetoothEnabledListeners) {
                             listener.onEnabled();
                         }
                         break;
@@ -167,15 +167,15 @@ public class BluetoothManager implements SmoothBluetooth.Listener {
     }
 
     public void addOnBluetoothEnabledListener(OnBluetoothEnabledListener listener) {
-        mOnBluetootEnabledListeners.add(listener);
+        mOnBluetoothEnabledListeners.add(listener);
 
         mContext.registerReceiver(mBluetoothActionReceiver, new IntentFilter(BluetoothAdapter.ACTION_STATE_CHANGED));
     }
 
     public void removeOnBluetoothEnabledListener(OnBluetoothEnabledListener listener) {
-        mOnBluetootEnabledListeners.remove(listener);
+        mOnBluetoothEnabledListeners.remove(listener);
 
-        if (mOnBluetootEnabledListeners.size() == 0) {
+        if (mOnBluetoothEnabledListeners.size() == 0) {
             mContext.unregisterReceiver(mBluetoothActionReceiver);
         }
     }
